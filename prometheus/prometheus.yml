@@ -1,0 +1,32 @@
+# my global config
+global:
+  scrape_interval:     15s # By default, scrape targets every 15 seconds.
+  evaluation_interval: 15s # By default, scrape targets every 15 seconds.
+  # scrape_timeout is set to the global default (10s).
+
+  external_labels:
+      monitor: 'prod'
+
+#rule_files:
+#  - "alert.rules"
+
+scrape_configs:
+  - job_name: 'prod56'
+    scrape_interval: 5s
+    static_configs:
+            - targets: ['dl360x4550:9100','dl360x4549:9100']
+              labels:
+                group: 'prod_blades'
+  - job_name: 'prod15'
+    scrape_interval: 5s
+    static_configs:
+            - targets: ['seliics01364:9100','seliics01363:9100']
+              labels:
+                group: 'prod_blades'
+  - job_name: 'localhost'
+    scrape_interval: 5s
+    static_configs:
+            - targets: ['10.216.155.207:9100']
+              labels:
+                group: 'localhost'
+

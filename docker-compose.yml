@@ -1,0 +1,83 @@
+version: '2'
+services:
+  node-exporter:
+    image: prom/node-exporter
+    container_name: node-exporter
+    expose:
+      - 9100
+    ports:
+      - 0.0.0.0:9100:9100
+      
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    volumes:
+      - /opt/container-data/monitoring/prometheus/:/etc/prometheus/
+      - /srv/prometheus:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+#      - '--alertmanager.url=http://alertmanager:9093'
+    expose:
+      - 9090
+    ports:
+      - 0.0.0.0:9090:9090
+    links:
+      - alertmanager:alertmanager
+
+  alertmanager:
+    image: prom/alertmanager
+    container_name: alertmanager
+    ports:
+      - 172.17.0.1:9093:9093
+    volumes:
+      - /opt/container-data/monitoring/alertmanager/:/etc/alertmanager/
+    command:
+      - '--config.file=/etc/alertmanager/config.yml'
+      - '-storage.path=/alertmanager'
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    depends_on:
+      - prometheus
+    ports:
+      - 0.0.0.0:3000:3000
+    volumes:
+      - /srv/grafana:/var/lib/grafana
+    env_file:
+      - /opt/container-data/monitoring/config.monitoring
+
+  elasticsearch:
+    image: elasticsearch
+    command: elasticsearch -Des.network.host=0.0.0.0
+    container_name: elasticsearch
+    volumes:
+      - /srv/elasticsearch:/usr/share/elasticsearch/data
+    expose:
+      - 9200
+      - 9300
+    ports:
+      - 172.17.0.1:9201:9200
+      - 172.17.0.1:9301:9300
+
+  logstash:
+    image: logstash
+    container_name: logstash
+    command: logstash -f /etc/logstash/conf.d/logstash.conf
+    volumes:
+      - /opt/container-data/monitoring/logstash/logstash.conf:/etc/logstash/conf.d/logstash.conf:ro
+    expose:
+      - 5000
+    ports:
+      - 5000:5000/udp
+      - 5000:5000/tcp
+
+  kibana:
+    image: kibana
+    container_name: kibana
+    volumes:
+      - /opt/container-data/monitoring/kibana/kibana.yml:/opt/kibana/config/kibana.yml:ro
+    expose:
+      - 5601
+    ports:
+      - 172.17.0.1:5601:5601

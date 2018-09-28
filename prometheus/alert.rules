@@ -1,0 +1,13 @@
+ALERT LoadAverage
+  IF node_load1 > 8
+  ANNOTATIONS {
+      summary = "Instance {{ $labels.instance }} under high load",
+      description = "{{ $labels.instance }} of job {{ $labels.job }} is under high load.",
+  }
+
+ALERT ServiceDown
+  IF time() - container_last_seen{container_label_com_docker_compose_project="docker"} > 10
+  ANNOTATIONS {
+      summary = "Service {{ $labels.instance }} is down",
+      description = "{{ $labels.instance }} of job {{ $labels.job }} is down",
+  }
